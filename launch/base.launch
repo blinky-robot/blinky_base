@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+  <node pkg="blinky_base" type="blinky_hardware_node" name="blinky_hardware_node" output="screen">
+    <rosparam command="load" file="$(find blinky_base)/config/hardware_config.yaml" />
+    <rosparam command="load" file="$(find blinky_base)/config/joint_limits.yaml" />
+  </node>
+
+  <include file="$(find blinky_control)/launch/control.launch" />
+</launch>

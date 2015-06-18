@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<package>
+  <name>blinky_base</name>
+  <version>0.1.0</version>
+  <description>Mobility base for Blinky</description>
+
+  <maintainer email="logans@cottsay.net">Scott K Logan</maintainer>
+
+  <license>BSD</license>
+
+  <!-- <url type="website">http://wiki.ros.org/robot_controller</url> -->
+
+  <author email="logans@cottsay.net">Scott K Logan</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>controller_manager</build_depend>
+  <build_depend>ft_scservo_driver</build_depend>
+  <build_depend>hardware_interface</build_depend>
+  <build_depend>joint_limits_interface</build_depend>
+  <build_depend>roscpp</build_depend>
+  <build_depend>roslaunch</build_depend>
+  <build_depend>transmission_interface</build_depend>
+  <build_depend>vesc_driver</build_depend>
+  <run_depend>blinky_control</run_depend>
+  <run_depend>controller_manager</run_depend>
+  <run_depend>ft_scservo_driver</run_depend>
+  <run_depend>hardware_interface</run_depend>
+  <run_depend>joint_limits_interface</run_depend>
+  <run_depend>roscpp</run_depend>
+  <run_depend>transmission_interface</run_depend>
+  <run_depend>vesc_driver</run_depend>
+</package>

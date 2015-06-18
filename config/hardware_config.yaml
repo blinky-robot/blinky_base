@@ -1,0 +1,13 @@
+drive_joint_name: wheels
+steering_joint_name: steering_angle
+
+servo_id: 2
+
+scservo_driver:
+  servos: [2]
+
+  servo_2:
+    max_angle_limit: 712
+    min_angle_limit: 312
+    rad_offset: -1.890499397
+    rad_per_tick: -0.003695991

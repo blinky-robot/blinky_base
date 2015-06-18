@@ -1,0 +1,23 @@
+joint_limits:
+  drive_motor:
+    has_effort_limits: false
+    has_position_limits: false
+    has_velocity_limits: true
+    max_velocity: 1000
+  steering_servo:
+    has_effort_limits: false
+    has_position_limits: true
+    has_velocity_limits: false
+    max_position: 0.71
+    min_position: -0.71
+  wheels:
+    has_effort_limits: false
+    has_position_limits: false
+    has_velocity_limits: true
+    max_velocity: 1000
+  steering_angle:
+    has_effort_limits: false
+    has_position_limits: true
+    has_velocity_limits: false
+    max_position: 0.71
+    min_position: -0.71
