@@ -1,6 +1,13 @@
 drive_joint_name: wheels
 steering_joint_name: steering_angle
 
+steering_servo_arm_joint_name: steering_servo_arm_joint
+
+front_left_wheel_joint_name: front_left_wheel_joint
+front_right_wheel_joint_name: front_right_wheel_joint
+rear_left_wheel_joint_name: rear_left_wheel_joint
+rear_right_wheel_joint_name: rear_right_wheel_joint
+
 servo_id: 2
 
 scservo_driver:
@@ -8,6 +15,6 @@ scservo_driver:
 
   servo_2:
     max_angle_limit: 712
-    min_angle_limit: 312
+    min_angle_limit: 277
     rad_offset: -1.7
     rad_per_tick: -0.003695991

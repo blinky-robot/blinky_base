@@ -32,6 +32,10 @@ namespace blinky_hardware
 	BlinkyHardware::BlinkyHardware(ros::NodeHandle &nh, ros::NodeHandle &nh_priv)
 		: drive_joint_name("wheels"),
 		  steering_joint_name("steering_angle"),
+		  front_left_wheel_joint_name("front_left_wheel"),
+		  front_right_wheel_joint_name("front_right_wheel"),
+		  rear_left_wheel_joint_name("rear_left_wheel"),
+		  rear_right_wheel_joint_name("rear_right_wheel"),
 		  joint_names_done(getJointNames(nh_priv)),
 		  drive_act_cmd(0.0),
 		  drive_act_eff(0.0),
@@ -46,6 +50,10 @@ namespace blinky_hardware
 		  drive_pos(0.0),
 		  drive_trans(11, 0.0),
 		  drive_vel(0.0),
+		  wheel_front_left_handle(front_left_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
+		  wheel_front_right_handle(front_right_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
+		  wheel_rear_left_handle(rear_left_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
+		  wheel_rear_right_handle(rear_right_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
 		  nh(nh),
 		  nh_priv(nh_priv),
 		  servo_bus(nh, ros::NodeHandle(nh_priv, "scservo_driver")),
@@ -59,6 +67,7 @@ namespace blinky_hardware
 		  steering_joint_limits_handle(steering_handle_cmd, steering_joint_limits),
 		  steering_pos(0.0),
 		  steering_vel(0.0),
+		  steering_servo_arm_handle(steering_servo_arm_joint_name, &steering_pos, &steering_vel, &steering_eff),
 		  vesc(nh, ros::NodeHandle(nh_priv, "vesc_driver"))
 	{
 		servo_bus.start();
@@ -76,7 +85,12 @@ namespace blinky_hardware
 
 		// Joint Interfaces
 		joint_state_interface.registerHandle(drive_handle);
+		joint_state_interface.registerHandle(wheel_front_left_handle);
+		joint_state_interface.registerHandle(wheel_front_right_handle);
+		joint_state_interface.registerHandle(wheel_rear_left_handle);
+		joint_state_interface.registerHandle(wheel_rear_right_handle);
 		joint_state_interface.registerHandle(steering_handle);
+		joint_state_interface.registerHandle(steering_servo_arm_handle);
 		registerInterface(&joint_state_interface);
 
 		joint_vel_interface.registerHandle(drive_handle_cmd);
@@ -194,6 +208,11 @@ namespace blinky_hardware
 	{
 		nh.param("drive_joint_name", drive_joint_name, drive_joint_name);
 		nh.param("steering_joint_name", steering_joint_name, steering_joint_name);
+		nh.param("steering_servo_arm_joint_name", steering_servo_arm_joint_name, steering_servo_arm_joint_name);
+		nh.param("front_left_wheel_joint_name", front_left_wheel_joint_name, front_left_wheel_joint_name);
+		nh.param("front_right_wheel_joint_name", front_right_wheel_joint_name, front_right_wheel_joint_name);
+		nh.param("rear_left_wheel_joint_name", rear_left_wheel_joint_name, rear_left_wheel_joint_name);
+		nh.param("rear_right_wheel_joint_name", rear_right_wheel_joint_name, rear_right_wheel_joint_name);
 
 		return true;
 	}

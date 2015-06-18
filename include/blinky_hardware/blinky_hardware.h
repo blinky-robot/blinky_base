@@ -54,6 +54,11 @@ namespace blinky_hardware
 
 		std::string drive_joint_name;
 		std::string steering_joint_name;
+		std::string steering_servo_arm_joint_name;
+		std::string front_left_wheel_joint_name;
+		std::string front_right_wheel_joint_name;
+		std::string rear_left_wheel_joint_name;
+		std::string rear_right_wheel_joint_name;
 		bool joint_names_done;
 
 		double drive_act_cmd;
@@ -77,6 +82,11 @@ namespace blinky_hardware
 		transmission_interface::SimpleTransmission drive_trans;
 		double drive_vel;
 
+		hardware_interface::JointStateHandle wheel_front_left_handle;
+		hardware_interface::JointStateHandle wheel_front_right_handle;
+		hardware_interface::JointStateHandle wheel_rear_left_handle;
+		hardware_interface::JointStateHandle wheel_rear_right_handle;
+
 		hardware_interface::PositionJointInterface joint_pos_interface;
 		joint_limits_interface::PositionJointSaturationInterface joint_pos_limits_interface;
 		hardware_interface::JointStateInterface joint_state_interface;
@@ -99,6 +109,8 @@ namespace blinky_hardware
 		joint_limits_interface::PositionJointSaturationHandle steering_joint_limits_handle;
 		double steering_pos;
 		double steering_vel;
+
+		hardware_interface::JointStateHandle steering_servo_arm_handle;
 
 		vesc_driver::VESC vesc;
 	};
