@@ -59,6 +59,8 @@ namespace blinky_hardware
 		std::string front_right_wheel_joint_name;
 		std::string rear_left_wheel_joint_name;
 		std::string rear_right_wheel_joint_name;
+		std::string front_left_steering_joint_name;
+		std::string front_right_steering_joint_name;
 		bool joint_names_done;
 
 		double drive_act_cmd;
@@ -100,17 +102,31 @@ namespace blinky_hardware
 		int servo_id;
 		bool servo_torque_enabled;
 
+		double steering_act_cmd;
+		transmission_interface::ActuatorData steering_act_cmd_data;
+		double steering_act_eff;
+		double steering_act_pos;
+		transmission_interface::ActuatorData steering_act_state_data;
+		transmission_interface::ActuatorToJointStateInterface steering_act_to_joint_state;
+		double steering_act_vel;
 		double steering_cmd;
+		transmission_interface::JointData steering_cmd_data;
 		double steering_eff;
 		hardware_interface::JointStateHandle steering_handle;
 		hardware_interface::JointHandle steering_handle_cmd;
 		joint_limits_interface::JointLimits steering_joint_limits;
+		transmission_interface::JointToActuatorVelocityInterface steering_joint_to_act_vel;
 		bool steering_joint_limits_done;
 		joint_limits_interface::PositionJointSaturationHandle steering_joint_limits_handle;
 		double steering_pos;
+		transmission_interface::JointData steering_state_data;
+		transmission_interface::SimpleTransmission steering_trans;
 		double steering_vel;
 
 		hardware_interface::JointStateHandle steering_servo_arm_handle;
+
+		hardware_interface::JointStateHandle wheel_front_left_steering_handle;
+		hardware_interface::JointStateHandle wheel_front_right_steering_handle;
 
 		vesc_driver::VESC vesc;
 	};

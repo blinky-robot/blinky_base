@@ -32,10 +32,12 @@ namespace blinky_hardware
 	BlinkyHardware::BlinkyHardware(ros::NodeHandle &nh, ros::NodeHandle &nh_priv)
 		: drive_joint_name("wheels"),
 		  steering_joint_name("steering_angle"),
-		  front_left_wheel_joint_name("front_left_wheel"),
-		  front_right_wheel_joint_name("front_right_wheel"),
-		  rear_left_wheel_joint_name("rear_left_wheel"),
-		  rear_right_wheel_joint_name("rear_right_wheel"),
+		  front_left_wheel_joint_name("front_left_wheel_joint"),
+		  front_right_wheel_joint_name("front_right_wheel_joint"),
+		  rear_left_wheel_joint_name("rear_left_wheel_joint"),
+		  rear_right_wheel_joint_name("rear_right_wheel_joint"),
+		  front_left_steering_joint_name("front_left_steering_joint"),
+		  front_right_steering_joint_name("front_right_steering_joint"),
 		  joint_names_done(getJointNames(nh_priv)),
 		  drive_act_cmd(0.0),
 		  drive_act_eff(0.0),
@@ -59,6 +61,10 @@ namespace blinky_hardware
 		  servo_bus(nh, ros::NodeHandle(nh_priv, "scservo_driver")),
 		  servo_id(0),
 		  servo_torque_enabled(false),
+		  steering_act_cmd(0.0),
+		  steering_act_eff(0.0),
+		  steering_act_pos(0.0),
+		  steering_act_vel(0.0),
 		  steering_cmd(0.0),
 		  steering_eff(0.0),
 		  steering_handle(steering_joint_name, &steering_pos, &steering_vel, &steering_eff),
@@ -66,8 +72,11 @@ namespace blinky_hardware
 		  steering_joint_limits_done(getSteeringJointLimits(nh_priv)),
 		  steering_joint_limits_handle(steering_handle_cmd, steering_joint_limits),
 		  steering_pos(0.0),
+		  steering_trans(4.7, 0.0),
 		  steering_vel(0.0),
 		  steering_servo_arm_handle(steering_servo_arm_joint_name, &steering_pos, &steering_vel, &steering_eff),
+		  wheel_front_left_steering_handle(front_left_steering_joint_name, &steering_pos, &steering_vel, &steering_eff),
+		  wheel_front_right_steering_handle(front_right_steering_joint_name, &steering_pos, &steering_vel, &steering_eff),
 		  vesc(nh, ros::NodeHandle(nh_priv, "vesc_driver"))
 	{
 		servo_bus.start();
@@ -89,6 +98,8 @@ namespace blinky_hardware
 		joint_state_interface.registerHandle(wheel_front_right_handle);
 		joint_state_interface.registerHandle(wheel_rear_left_handle);
 		joint_state_interface.registerHandle(wheel_rear_right_handle);
+		joint_state_interface.registerHandle(wheel_front_left_steering_handle);
+		joint_state_interface.registerHandle(wheel_front_right_steering_handle);
 		joint_state_interface.registerHandle(steering_handle);
 		joint_state_interface.registerHandle(steering_servo_arm_handle);
 		registerInterface(&joint_state_interface);
@@ -103,16 +114,26 @@ namespace blinky_hardware
 		drive_act_state_data.effort.push_back(&drive_act_eff);
 		drive_act_state_data.position.push_back(&drive_act_pos);
 		drive_act_state_data.velocity.push_back(&drive_act_vel);
+		steering_act_state_data.effort.push_back(&steering_act_eff);
+		steering_act_state_data.position.push_back(&steering_act_pos);
+		steering_act_state_data.velocity.push_back(&steering_act_vel);
 
 		drive_state_data.effort.push_back(&drive_eff);
 		drive_state_data.position.push_back(&drive_pos);
 		drive_state_data.velocity.push_back(&drive_vel);
+		steering_state_data.effort.push_back(&steering_eff);
+		steering_state_data.position.push_back(&steering_pos);
+		steering_state_data.velocity.push_back(&steering_vel);
 
 		drive_act_cmd_data.velocity.push_back(&drive_act_cmd);
 		drive_cmd_data.velocity.push_back(&drive_cmd);
+		steering_act_cmd_data.velocity.push_back(&steering_act_cmd);
+		steering_cmd_data.velocity.push_back(&steering_cmd);
 
 		drive_act_to_joint_state.registerHandle(transmission_interface::ActuatorToJointStateHandle("drive_trans", &drive_trans, drive_act_state_data, drive_state_data));
 		drive_joint_to_act_vel.registerHandle(transmission_interface::JointToActuatorVelocityHandle("drive_trans", &drive_trans, drive_act_cmd_data, drive_cmd_data));
+		steering_act_to_joint_state.registerHandle(transmission_interface::ActuatorToJointStateHandle("steering_trans", &steering_trans, steering_act_state_data, steering_state_data));
+		steering_joint_to_act_vel.registerHandle(transmission_interface::JointToActuatorVelocityHandle("steering_trans", &steering_trans, steering_act_cmd_data, steering_cmd_data));
 
 		// Joint Limits
 		joint_pos_limits_interface.registerHandle(steering_joint_limits_handle);
@@ -149,11 +170,13 @@ namespace blinky_hardware
 		}
 
 		drive_act_to_joint_state.propagate();
+		steering_act_to_joint_state.propagate();
 	}
 
 	void BlinkyHardware::write(ros::Time time, ros::Duration period)
 	{
 		drive_joint_to_act_vel.propagate();
+		steering_joint_to_act_vel.propagate();
 
 		joint_pos_limits_interface.enforceLimits(period);
 		joint_vel_limits_interface.enforceLimits(period);
@@ -209,6 +232,8 @@ namespace blinky_hardware
 		nh.param("drive_joint_name", drive_joint_name, drive_joint_name);
 		nh.param("steering_joint_name", steering_joint_name, steering_joint_name);
 		nh.param("steering_servo_arm_joint_name", steering_servo_arm_joint_name, steering_servo_arm_joint_name);
+		nh.param("front_left_steering_joint_name", front_left_steering_joint_name, front_left_steering_joint_name);
+		nh.param("front_right_steering_joint_name", front_right_steering_joint_name, front_right_steering_joint_name);
 		nh.param("front_left_wheel_joint_name", front_left_wheel_joint_name, front_left_wheel_joint_name);
 		nh.param("front_right_wheel_joint_name", front_right_wheel_joint_name, front_right_wheel_joint_name);
 		nh.param("rear_left_wheel_joint_name", rear_left_wheel_joint_name, rear_left_wheel_joint_name);
