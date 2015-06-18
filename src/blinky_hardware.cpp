@@ -72,7 +72,7 @@ namespace blinky_hardware
 		  steering_joint_limits_done(getSteeringJointLimits(nh_priv)),
 		  steering_joint_limits_handle(steering_handle_cmd, steering_joint_limits),
 		  steering_pos(0.0),
-		  steering_trans(4.7, 0.0),
+		  steering_trans(-4.7, 0.0),
 		  steering_vel(0.0),
 		  steering_servo_arm_handle(steering_servo_arm_joint_name, &steering_pos, &steering_vel, &steering_eff),
 		  wheel_front_left_steering_handle(front_left_steering_joint_name, &steering_pos, &steering_vel, &steering_eff),
@@ -153,7 +153,7 @@ namespace blinky_hardware
 	{
 		try
 		{
-			servo_bus.getStatus(servo_id, steering_vel, steering_pos, steering_eff);
+			servo_bus.getStatus(servo_id, steering_act_vel, steering_act_pos, steering_act_eff);
 		}
 		catch (ft_scservo_driver::Exception &e)
 		{
@@ -188,7 +188,7 @@ namespace blinky_hardware
 
 		try
 		{
-			servo_bus.setPosition(servo_id, steering_cmd);
+			servo_bus.setPosition(servo_id, steering_act_cmd);
 		}
 		catch (ft_scservo_driver::Exception &e)
 		{
