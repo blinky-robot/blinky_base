@@ -72,7 +72,7 @@ namespace blinky_hardware
 		  steering_joint_limits_done(getSteeringJointLimits(nh_priv)),
 		  steering_joint_limits_handle(steering_handle_cmd, steering_joint_limits),
 		  steering_pos(0.0),
-		  steering_trans(-4.7, 0.0),
+		  steering_trans(-2.35, 0.0),
 		  steering_vel(0.0),
 		  steering_servo_arm_handle(steering_servo_arm_joint_name, &steering_pos, &steering_vel, &steering_eff),
 		  wheel_front_left_steering_handle(front_left_steering_joint_name, &steering_pos, &steering_vel, &steering_eff),
