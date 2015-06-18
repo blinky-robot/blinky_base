@@ -9,5 +9,5 @@ scservo_driver:
   servo_2:
     max_angle_limit: 712
     min_angle_limit: 312
-    rad_offset: -1.890499397
+    rad_offset: -1.7
     rad_per_tick: -0.003695991
