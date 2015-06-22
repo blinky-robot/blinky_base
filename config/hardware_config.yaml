@@ -16,6 +16,7 @@ scservo_driver:
   servos: [1]
 
   servo_1:
+    max_torque: 568
     max_angle_limit: 712
     min_angle_limit: 277
     rad_offset: -1.7766
