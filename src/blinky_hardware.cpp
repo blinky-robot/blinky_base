@@ -50,7 +50,7 @@ namespace blinky_hardware
 		  drive_joint_limits_done(getDriveJointLimits(nh_priv)),
 		  drive_joint_limits_handle(drive_handle_cmd, drive_joint_limits),
 		  drive_pos(0.0),
-		  drive_trans(11, 0.0),
+		  drive_trans(12, 0.0),
 		  drive_vel(0.0),
 		  wheel_front_left_handle(front_left_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
 		  wheel_front_right_handle(front_right_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
