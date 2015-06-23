@@ -23,6 +23,7 @@ void controlThread(ros::Rate rate, blinky_hardware::BlinkyHardware *robot, contr
 
 		robot->read(this_time_ros, elapsed);
 		cm->update(this_time_ros, elapsed);
+		robot->update(this_time_ros, elapsed);
 		robot->write(this_time_ros, elapsed);
 		rate.sleep();
 

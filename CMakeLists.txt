@@ -3,6 +3,7 @@ project(blinky_base)
 
 find_package(catkin REQUIRED COMPONENTS
   controller_manager
+  diagnostic_updater
   ft_scservo_driver
   hardware_interface
   joint_limits_interface
@@ -20,7 +21,7 @@ find_package(Boost REQUIRED COMPONENTS thread chrono)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES blinky_hardware
-  CATKIN_DEPENDS controller_manager ft_scservo_driver hardware_interface joint_limits_interface roscpp transmission_interface vesc_driver
+  CATKIN_DEPENDS controller_manager diagnostic_updater ft_scservo_driver hardware_interface joint_limits_interface roscpp transmission_interface vesc_driver
 )
 
 ###########

@@ -58,6 +58,10 @@ namespace blinky_hardware
 		  wheel_rear_right_handle(rear_right_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
 		  nh(nh),
 		  nh_priv(nh_priv),
+		  diag(nh, nh_priv),
+		  diag_freq(diagnostic_updater::FrequencyStatusParam(&diag_freq_min, &diag_freq_max, 0.1, 25)),
+		  diag_freq_min(400.0 / 9.0),
+		  diag_freq_max(600.0 / 11.0),
 		  servo_bus(nh, ros::NodeHandle(nh_priv, "scservo_driver")),
 		  servo_id(0),
 		  servo_torque_enabled(false),
@@ -81,6 +85,9 @@ namespace blinky_hardware
 	{
 		servo_bus.start();
 		vesc.start();
+
+		diag.setHardwareID("Blinky Base Hardware Interface");
+		diag.add(diag_freq);
 
 		nh_priv.param("servo_id", servo_id, servo_id);
 		if (!joint_limits_interface::getJointLimits(steering_joint_name, nh_priv, steering_joint_limits))
@@ -171,6 +178,12 @@ namespace blinky_hardware
 
 		drive_act_to_joint_state.propagate();
 		steering_act_to_joint_state.propagate();
+	}
+
+	void BlinkyHardware::update(ros::Time time, ros::Duration period)
+	{
+		diag_freq.tick();
+		diag.update();
 	}
 
 	void BlinkyHardware::write(ros::Time time, ros::Duration period)

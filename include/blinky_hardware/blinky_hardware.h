@@ -26,6 +26,8 @@
 #ifndef _blinky_hardware_h
 #define _blinky_hardware_h
 
+#include <diagnostic_updater/diagnostic_updater.h>
+#include <diagnostic_updater/update_functions.h>
 #include <ft_scservo_driver/scservo_driver.hpp>
 #include <hardware_interface/joint_command_interface.h>
 #include <hardware_interface/joint_state_interface.h>
@@ -43,6 +45,7 @@ namespace blinky_hardware
 		BlinkyHardware(ros::NodeHandle &nh, ros::NodeHandle &nh_priv);
 		~BlinkyHardware();
 		void read(ros::Time time, ros::Duration period);
+		void update(ros::Time time, ros::Duration period);
 		void write(ros::Time time, ros::Duration period);
 
 
@@ -97,6 +100,10 @@ namespace blinky_hardware
 
 		ros::NodeHandle nh;
 		ros::NodeHandle nh_priv;
+		diagnostic_updater::Updater diag;
+		diagnostic_updater::FrequencyStatus diag_freq;
+		double diag_freq_min;
+		double diag_freq_max;
 
 		ft_scservo_driver::SCServoBus servo_bus;
 		int servo_id;
