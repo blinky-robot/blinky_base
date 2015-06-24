@@ -59,7 +59,7 @@ namespace blinky_hardware
 		  nh(nh),
 		  nh_priv(nh_priv),
 		  diag(nh, nh_priv),
-		  diag_freq(diagnostic_updater::FrequencyStatusParam(&diag_freq_min, &diag_freq_max, 0.1, 25)),
+		  diag_freq(diagnostic_updater::FrequencyStatusParam(&diag_freq_min, &diag_freq_max, 0.1, 10)),
 		  diag_freq_min(400.0 / 9.0),
 		  diag_freq_max(600.0 / 11.0),
 		  servo_bus(nh, ros::NodeHandle(nh_priv, "scservo_driver")),
