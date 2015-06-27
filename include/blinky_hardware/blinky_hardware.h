@@ -28,14 +28,14 @@
 
 #include <diagnostic_updater/diagnostic_updater.h>
 #include <diagnostic_updater/update_functions.h>
-#include <ft_scservo_driver/scservo_driver.hpp>
-#include <hardware_interface/joint_command_interface.h>
-#include <hardware_interface/joint_state_interface.h>
+#include <ft_scservo_driver/ft_scservo_handle.hpp>
 #include <hardware_interface/robot_hw.h>
-#include <joint_limits_interface/joint_limits_interface.h>
-#include <transmission_interface/simple_transmission.h>
-#include <transmission_interface/transmission_interface.h>
-#include <vesc_driver/vesc_driver.hpp>
+#include <vesc_driver/vesc_handle.hpp>
+
+#include <hardware_interface/actuator_command_interface.h>
+#include <hardware_interface/actuator_state_interface.h>
+#include <transmission_interface/robot_transmissions.h>
+#include <transmission_interface/transmission_interface_loader.h>
 
 namespace blinky_hardware
 {
@@ -50,92 +50,23 @@ namespace blinky_hardware
 
 
 	private:
-		bool getDriveJointLimits(ros::NodeHandle &nh);
-		bool getSteeringJointLimits(ros::NodeHandle &nh);
-		bool getJointNames(ros::NodeHandle &nh);
-		void trySetServoTorque(bool enable);
-
-		std::string drive_joint_name;
-		std::string steering_joint_name;
-		std::string steering_servo_arm_joint_name;
-		std::string front_left_wheel_joint_name;
-		std::string front_right_wheel_joint_name;
-		std::string rear_left_wheel_joint_name;
-		std::string rear_right_wheel_joint_name;
-		std::string front_left_steering_joint_name;
-		std::string front_right_steering_joint_name;
-		bool joint_names_done;
-
-		double drive_act_cmd;
-		transmission_interface::ActuatorData drive_act_cmd_data;
-		double drive_act_eff;
-		double drive_act_pos;
-		transmission_interface::ActuatorData drive_act_state_data;
-		transmission_interface::ActuatorToJointStateInterface drive_act_to_joint_state;
-		double drive_act_vel;
-		double drive_cmd;
-		transmission_interface::JointData drive_cmd_data;
-		double drive_eff;
-		hardware_interface::JointStateHandle drive_handle;
-		hardware_interface::JointHandle drive_handle_cmd;
-		joint_limits_interface::JointLimits drive_joint_limits;
-		bool drive_joint_limits_done;
-		joint_limits_interface::VelocityJointSaturationHandle drive_joint_limits_handle;
-		transmission_interface::JointToActuatorVelocityInterface drive_joint_to_act_vel;
-		double drive_pos;
-		transmission_interface::JointData drive_state_data;
-		transmission_interface::SimpleTransmission drive_trans;
-		double drive_vel;
-
-		hardware_interface::JointStateHandle wheel_front_left_handle;
-		hardware_interface::JointStateHandle wheel_front_right_handle;
-		hardware_interface::JointStateHandle wheel_rear_left_handle;
-		hardware_interface::JointStateHandle wheel_rear_right_handle;
-
-		hardware_interface::PositionJointInterface joint_pos_interface;
-		joint_limits_interface::PositionJointSaturationInterface joint_pos_limits_interface;
-		hardware_interface::JointStateInterface joint_state_interface;
-		hardware_interface::VelocityJointInterface joint_vel_interface;
-		joint_limits_interface::VelocityJointSaturationInterface joint_vel_limits_interface;
-
 		ros::NodeHandle nh;
 		ros::NodeHandle nh_priv;
+		std::string robot_description;
 		diagnostic_updater::Updater diag;
 		diagnostic_updater::FrequencyStatus diag_freq;
 		double diag_freq_min;
 		double diag_freq_max;
 
-		ft_scservo_driver::SCServoBus servo_bus;
-		int servo_id;
-		bool servo_torque_enabled;
+		transmission_interface::RobotTransmissions transmissions;
+		boost::scoped_ptr<transmission_interface::TransmissionInterfaceLoader> transmission_loader;
 
-		double steering_act_cmd;
-		transmission_interface::ActuatorData steering_act_cmd_data;
-		double steering_act_eff;
-		double steering_act_pos;
-		transmission_interface::ActuatorData steering_act_state_data;
-		transmission_interface::ActuatorToJointStateInterface steering_act_to_joint_state;
-		double steering_act_vel;
-		double steering_cmd;
-		transmission_interface::JointData steering_cmd_data;
-		double steering_eff;
-		hardware_interface::JointStateHandle steering_handle;
-		hardware_interface::JointHandle steering_handle_cmd;
-		joint_limits_interface::JointLimits steering_joint_limits;
-		transmission_interface::JointToActuatorVelocityInterface steering_joint_to_act_vel;
-		bool steering_joint_limits_done;
-		joint_limits_interface::PositionJointSaturationHandle steering_joint_limits_handle;
-		double steering_pos;
-		transmission_interface::JointData steering_state_data;
-		transmission_interface::SimpleTransmission steering_trans;
-		double steering_vel;
+		hardware_interface::PositionActuatorInterface actuator_position_interface;
+		hardware_interface::ActuatorStateInterface actuator_state_interface;
+		hardware_interface::VelocityActuatorInterface actuator_velocity_interface;
 
-		hardware_interface::JointStateHandle steering_servo_arm_handle;
-
-		hardware_interface::JointStateHandle wheel_front_left_steering_handle;
-		hardware_interface::JointStateHandle wheel_front_right_steering_handle;
-
-		vesc_driver::VESC vesc;
+		ft_scservo_driver::SCServoHandle servo_handle;
+		vesc_driver::VESCHandle vesc_handle;
 	};
 }
 

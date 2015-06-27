@@ -25,159 +25,53 @@
 
 #include "blinky_hardware/blinky_hardware.h"
 
-#include <joint_limits_interface/joint_limits_rosparam.h>
+#include <hardware_interface/joint_command_interface.h>
+#include <hardware_interface/joint_state_interface.h>
 
 namespace blinky_hardware
 {
 	BlinkyHardware::BlinkyHardware(ros::NodeHandle &nh, ros::NodeHandle &nh_priv)
-		: drive_joint_name("wheels"),
-		  steering_joint_name("steering_angle"),
-		  front_left_wheel_joint_name("front_left_wheel_joint"),
-		  front_right_wheel_joint_name("front_right_wheel_joint"),
-		  rear_left_wheel_joint_name("rear_left_wheel_joint"),
-		  rear_right_wheel_joint_name("rear_right_wheel_joint"),
-		  front_left_steering_joint_name("front_left_steering_joint"),
-		  front_right_steering_joint_name("front_right_steering_joint"),
-		  joint_names_done(getJointNames(nh_priv)),
-		  drive_act_cmd(0.0),
-		  drive_act_eff(0.0),
-		  drive_act_pos(0.0),
-		  drive_act_vel(0.0),
-		  drive_cmd(0.0),
-		  drive_eff(0.0),
-		  drive_handle(drive_joint_name, &drive_pos, &drive_vel, &drive_eff),
-		  drive_handle_cmd(drive_handle, &drive_cmd),
-		  drive_joint_limits_done(getDriveJointLimits(nh_priv)),
-		  drive_joint_limits_handle(drive_handle_cmd, drive_joint_limits),
-		  drive_pos(0.0),
-		  drive_trans(12, 0.0),
-		  drive_vel(0.0),
-		  wheel_front_left_handle(front_left_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
-		  wheel_front_right_handle(front_right_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
-		  wheel_rear_left_handle(rear_left_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
-		  wheel_rear_right_handle(rear_right_wheel_joint_name, &drive_pos, &drive_vel, &drive_eff),
-		  nh(nh),
+		: nh(nh),
 		  nh_priv(nh_priv),
+		  robot_description(""),
 		  diag(nh, nh_priv),
 		  diag_freq(diagnostic_updater::FrequencyStatusParam(&diag_freq_min, &diag_freq_max, 0.1, 10)),
 		  diag_freq_min(400.0 / 9.0),
 		  diag_freq_max(600.0 / 11.0),
-		  servo_bus(nh, ros::NodeHandle(nh_priv, "scservo_driver")),
-		  servo_id(0),
-		  servo_torque_enabled(false),
-		  steering_act_cmd(0.0),
-		  steering_act_eff(0.0),
-		  steering_act_pos(0.0),
-		  steering_act_vel(0.0),
-		  steering_cmd(0.0),
-		  steering_eff(0.0),
-		  steering_handle(steering_joint_name, &steering_pos, &steering_vel, &steering_eff),
-		  steering_handle_cmd(steering_handle, &steering_cmd),
-		  steering_joint_limits_done(getSteeringJointLimits(nh_priv)),
-		  steering_joint_limits_handle(steering_handle_cmd, steering_joint_limits),
-		  steering_pos(0.0),
-		  steering_trans(-2.35, 0.0),
-		  steering_vel(0.0),
-		  steering_servo_arm_handle(steering_servo_arm_joint_name, &steering_pos, &steering_vel, &steering_eff),
-		  wheel_front_left_steering_handle(front_left_steering_joint_name, &steering_pos, &steering_vel, &steering_eff),
-		  wheel_front_right_steering_handle(front_right_steering_joint_name, &steering_pos, &steering_vel, &steering_eff),
-		  vesc(nh, ros::NodeHandle(nh_priv, "vesc_driver"))
+		  servo_handle(nh, ros::NodeHandle(nh_priv, "scservo_driver")),
+		  vesc_handle(nh, ros::NodeHandle(nh_priv, "vesc_driver"))
 	{
-		servo_bus.start();
-		vesc.start();
+		nh.param("robot_description", robot_description, robot_description);
 
 		diag.setHardwareID("Blinky Base Hardware Interface");
 		diag.add(diag_freq);
 
-		nh_priv.param("servo_id", servo_id, servo_id);
-		if (!joint_limits_interface::getJointLimits(steering_joint_name, nh_priv, steering_joint_limits))
-		{
-			ROS_WARN("Failed to populate joint limits for steering_joint");
-		}
-		if (!joint_limits_interface::getJointLimits(drive_joint_name, nh_priv, drive_joint_limits))
-		{
-			ROS_WARN("Failed to populate joint limits for drive_joint");
-		}
+		servo_handle.registerPositionHandles(actuator_position_interface);
+		servo_handle.registerStateHandles(actuator_state_interface);
+		servo_handle.registerVelocityHandles(actuator_velocity_interface);
 
-		// Joint Interfaces
-		joint_state_interface.registerHandle(drive_handle);
-		joint_state_interface.registerHandle(wheel_front_left_handle);
-		joint_state_interface.registerHandle(wheel_front_right_handle);
-		joint_state_interface.registerHandle(wheel_rear_left_handle);
-		joint_state_interface.registerHandle(wheel_rear_right_handle);
-		joint_state_interface.registerHandle(wheel_front_left_steering_handle);
-		joint_state_interface.registerHandle(wheel_front_right_steering_handle);
-		joint_state_interface.registerHandle(steering_handle);
-		joint_state_interface.registerHandle(steering_servo_arm_handle);
-		registerInterface(&joint_state_interface);
+		vesc_handle.registerStateHandle(actuator_state_interface);
+		vesc_handle.registerVelocityHandle(actuator_velocity_interface);
 
-		joint_vel_interface.registerHandle(drive_handle_cmd);
-		registerInterface(&joint_vel_interface);
+		registerInterface(&actuator_position_interface);
+		registerInterface(&actuator_state_interface);
+		registerInterface(&actuator_velocity_interface);
 
-		joint_pos_interface.registerHandle(steering_handle_cmd);
-		registerInterface(&joint_pos_interface);
-
-		// Transmission Interfaces
-		drive_act_state_data.effort.push_back(&drive_act_eff);
-		drive_act_state_data.position.push_back(&drive_act_pos);
-		drive_act_state_data.velocity.push_back(&drive_act_vel);
-		steering_act_state_data.effort.push_back(&steering_act_eff);
-		steering_act_state_data.position.push_back(&steering_act_pos);
-		steering_act_state_data.velocity.push_back(&steering_act_vel);
-
-		drive_state_data.effort.push_back(&drive_eff);
-		drive_state_data.position.push_back(&drive_pos);
-		drive_state_data.velocity.push_back(&drive_vel);
-		steering_state_data.effort.push_back(&steering_eff);
-		steering_state_data.position.push_back(&steering_pos);
-		steering_state_data.velocity.push_back(&steering_vel);
-
-		drive_act_cmd_data.velocity.push_back(&drive_act_cmd);
-		drive_cmd_data.velocity.push_back(&drive_cmd);
-		steering_act_cmd_data.velocity.push_back(&steering_act_cmd);
-		steering_cmd_data.velocity.push_back(&steering_cmd);
-
-		drive_act_to_joint_state.registerHandle(transmission_interface::ActuatorToJointStateHandle("drive_trans", &drive_trans, drive_act_state_data, drive_state_data));
-		drive_joint_to_act_vel.registerHandle(transmission_interface::JointToActuatorVelocityHandle("drive_trans", &drive_trans, drive_act_cmd_data, drive_cmd_data));
-		steering_act_to_joint_state.registerHandle(transmission_interface::ActuatorToJointStateHandle("steering_trans", &steering_trans, steering_act_state_data, steering_state_data));
-		steering_joint_to_act_vel.registerHandle(transmission_interface::JointToActuatorVelocityHandle("steering_trans", &steering_trans, steering_act_cmd_data, steering_cmd_data));
-
-		// Joint Limits
-		joint_pos_limits_interface.registerHandle(steering_joint_limits_handle);
-		joint_vel_limits_interface.registerHandle(drive_joint_limits_handle);
-
-		trySetServoTorque(true);
+		transmission_loader.reset(new transmission_interface::TransmissionInterfaceLoader(this, &transmissions));
+		transmission_loader->load(robot_description);
 	}
 
 	BlinkyHardware::~BlinkyHardware()
 	{
-		trySetServoTorque(false);
-		vesc.stop();
-		servo_bus.stop();
 	}
 
 	void BlinkyHardware::read(ros::Time time, ros::Duration period)
 	{
-		try
-		{
-			servo_bus.getStatus(servo_id, steering_act_vel, steering_act_pos, steering_act_eff);
-		}
-		catch (ft_scservo_driver::Exception &e)
-		{
-			ROS_WARN_THROTTLE(1, "Failed to get servo status: %s", e.what());
-		}
+		servo_handle.read();
+		vesc_handle.read();
 
-		try
-		{
-			vesc.getStatus(drive_act_vel, drive_act_pos);
-		}
-		catch (vesc_driver::Exception &e)
-		{
-			ROS_WARN_THROTTLE(1, "Failed to get VESC status: %s", e.what());
-		}
-
-		drive_act_to_joint_state.propagate();
-		steering_act_to_joint_state.propagate();
+		if(transmissions.get<transmission_interface::ActuatorToJointStateInterface>())
+			transmissions.get<transmission_interface::ActuatorToJointStateInterface>()->propagate();
 	}
 
 	void BlinkyHardware::update(ros::Time time, ros::Duration period)
@@ -188,83 +82,12 @@ namespace blinky_hardware
 
 	void BlinkyHardware::write(ros::Time time, ros::Duration period)
 	{
-		drive_joint_to_act_vel.propagate();
-		steering_joint_to_act_vel.propagate();
+		if(transmissions.get<transmission_interface::JointToActuatorPositionInterface>())
+			transmissions.get<transmission_interface::JointToActuatorPositionInterface>()->propagate();
+		if(transmissions.get<transmission_interface::JointToActuatorVelocityInterface>())
+			transmissions.get<transmission_interface::JointToActuatorVelocityInterface>()->propagate();
 
-		joint_pos_limits_interface.enforceLimits(period);
-		joint_vel_limits_interface.enforceLimits(period);
-
-		if (!servo_torque_enabled)
-		{
-			trySetServoTorque(true);
-		}
-
-		try
-		{
-			servo_bus.setPosition(servo_id, steering_act_cmd);
-		}
-		catch (ft_scservo_driver::Exception &e)
-		{
-			ROS_WARN_THROTTLE(1, "Failed to set servo position: %s", e.what());
-		}
-
-		try
-		{
-			vesc.setVelocity(drive_act_cmd);
-		}
-		catch (vesc_driver::Exception &e)
-		{
-			ROS_WARN_THROTTLE(1, "Failed to set VESC velocity: %s", e.what());
-		}
-	}
-
-	bool BlinkyHardware::getDriveJointLimits(ros::NodeHandle &nh_priv)
-	{
-		if (!joint_limits_interface::getJointLimits(drive_joint_name, nh_priv, drive_joint_limits))
-		{
-			ROS_WARN("Failed to populate joint limits for drive_joint");
-			return false;
-		}
-
-		return true;
-	}
-
-	bool BlinkyHardware::getSteeringJointLimits(ros::NodeHandle &nh_priv)
-	{
-		if (!joint_limits_interface::getJointLimits(steering_joint_name, nh_priv, steering_joint_limits))
-		{
-			ROS_WARN("Failed to populate joint limits for steering_joint");
-			return false;
-		}
-
-		return true;
-	}
-
-	bool BlinkyHardware::getJointNames(ros::NodeHandle &nh)
-	{
-		nh.param("drive_joint_name", drive_joint_name, drive_joint_name);
-		nh.param("steering_joint_name", steering_joint_name, steering_joint_name);
-		nh.param("steering_servo_arm_joint_name", steering_servo_arm_joint_name, steering_servo_arm_joint_name);
-		nh.param("front_left_steering_joint_name", front_left_steering_joint_name, front_left_steering_joint_name);
-		nh.param("front_right_steering_joint_name", front_right_steering_joint_name, front_right_steering_joint_name);
-		nh.param("front_left_wheel_joint_name", front_left_wheel_joint_name, front_left_wheel_joint_name);
-		nh.param("front_right_wheel_joint_name", front_right_wheel_joint_name, front_right_wheel_joint_name);
-		nh.param("rear_left_wheel_joint_name", rear_left_wheel_joint_name, rear_left_wheel_joint_name);
-		nh.param("rear_right_wheel_joint_name", rear_right_wheel_joint_name, rear_right_wheel_joint_name);
-
-		return true;
-	}
-
-	void BlinkyHardware::trySetServoTorque(bool enable)
-	{
-		try
-		{
-			servo_bus.setEnableTorque(servo_id, enable);
-			servo_torque_enabled = enable;
-		}
-		catch (ft_scservo_driver::Exception &e)
-		{
-			ROS_WARN_THROTTLE(1, "Failed to %s servo torque", enable ? "enable" : "disable");
-		}
+		vesc_handle.write();
+		servo_handle.write();
 	}
 }

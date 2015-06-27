@@ -1,5 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+  <param name="robot_description" textfile="$(find blinky_description)/urdf/blinky.urdf" />
+
   <node pkg="blinky_base" type="blinky_hardware_node" name="blinky_hardware_node" output="screen">
     <rosparam command="load" file="$(find blinky_base)/config/hardware_config.yaml" />
     <rosparam command="load" file="$(find blinky_base)/config/joint_limits.yaml" />
